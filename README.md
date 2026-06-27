@@ -7,6 +7,15 @@ retrieval-augmented chat over the corpus.
 > **Status: work in progress.** Foundations are in place (schema, migrations, DB clients,
 > tooling). Ingestion, retrieval, and the UI are being built out. See the roadmap below.
 
+### Sources (content that informs the platform):
+
+- **arXiv** — cs.CL, cs.AI, and cs.LG (Atom API)
+- **Hacker News** — AI/ML stories (Algolia API)
+- **Anthropic blog** (RSS)
+- **OpenAI blog** (RSS)
+- **Google DeepMind blog** (RSS)
+- **Simon Willison's blog** (RSS)
+
 ## What it does
 
 - **Ingests** from arXiv (cs.CL, cs.AI, cs.LG) and Hacker News, with AI blogs (RSS) to follow.
