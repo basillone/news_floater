@@ -3,16 +3,19 @@ import "./load-env";
 import { closeDb, db } from "@/db/node";
 import { ingestAll } from "@/ingest/run";
 import { arxivAdapter } from "@/ingest/sources/arxiv";
+import { hnAdapter } from "@/ingest/sources/hn";
 
 async function main() {
   const limit = Number(process.env.BACKFILL_LIMIT ?? 100);
   console.log(`Backfill starting (limit=${limit} per source)...`);
 
-  const results = await ingestAll(db, [arxivAdapter], { limit });
+  const results = await ingestAll(db, [arxivAdapter, hnAdapter], { limit });
 
   for (const r of results) {
     if (r.status === "ok") {
-      console.log(`  ${r.source}: seen ${r.seen}, wrote ${r.upserted}`);
+      console.log(
+        `  ${r.source}: seen ${r.seen}, docs +${r.documentsWritten}, mentions ${r.mentionsWritten}`,
+      );
     } else {
       console.error(`  ${r.source}: FAILED — ${r.error}`);
     }

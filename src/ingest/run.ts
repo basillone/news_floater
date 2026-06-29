@@ -1,14 +1,15 @@
 import { eq } from "drizzle-orm";
 
 import { ingestionRuns } from "@/db/schema";
-import type { SourceAdapter, SourceName, FetchOptions } from "./types";
-import { upsertItems, type Database } from "./upsert";
+import { writeItems, type Database } from "./resolve";
+import type { FetchOptions, SourceAdapter, SourceName } from "./types";
 
 export interface IngestResult {
   source: SourceName;
   status: "ok" | "failed";
   seen: number;
-  upserted: number;
+  documentsWritten: number;
+  mentionsWritten: number;
   error?: string;
 }
 
@@ -29,19 +30,32 @@ export async function ingestSource(
 
   try {
     const fetched = await adapter.fetchRecent(opts);
-    const { seen, upserted } = await upsertItems(db, fetched);
+    const { seen, documentsWritten, mentionsWritten } = await writeItems(db, fetched);
     await db
       .update(ingestionRuns)
-      .set({ finishedAt: new Date(), itemsSeen: seen, itemsUpserted: upserted, status: "ok" })
+      .set({
+        finishedAt: new Date(),
+        itemsSeen: seen,
+        documentsWritten,
+        mentionsWritten,
+        status: "ok",
+      })
       .where(eq(ingestionRuns.id, run.id));
-    return { source: adapter.name, status: "ok", seen, upserted };
+    return { source: adapter.name, status: "ok", seen, documentsWritten, mentionsWritten };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await db
       .update(ingestionRuns)
       .set({ finishedAt: new Date(), status: "failed", error: message })
       .where(eq(ingestionRuns.id, run.id));
-    return { source: adapter.name, status: "failed", seen: 0, upserted: 0, error: message };
+    return {
+      source: adapter.name,
+      status: "failed",
+      seen: 0,
+      documentsWritten: 0,
+      mentionsWritten: 0,
+      error: message,
+    };
   }
 }
 

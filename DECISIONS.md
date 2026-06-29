@@ -65,13 +65,20 @@ This split is the difference between a pipeline that survives in serverless and 
 
 Every external API response (arXiv, HN, RSS) is parsed and validated with Zod before it enters the system. External payloads are never `any`-typed. Treating third-party data as suspicious input — and failing loudly when it doesn't match — is a deliberate choice, not an afterthought.
 
-### Deduplication: a `dedup_key`, not duplicate rows
+### Deduplication: a `documents` + `mentions` model
 
-The same paper often appears on both arXiv and HN. Rather than store it twice, items carry a normalized `dedup_key` (for arXiv, the version-stripped ID — `2401.12345v2` → `2401.12345`; for HN, an arXiv ID extracted from the story URL when present). When an HN story points at a paper already in the corpus, its signal (score, comments URL) is attached to the existing item instead of creating a new row. URL normalization is an isolated, unit-tested pure function — it's the unglamorous core of dedup and the place bugs hide.
+The same paper often appears on both arXiv and HN. Rather than store it twice, the schema separates the canonical work from its appearances:
+
+- **`documents`** — the canonical paper/post (title, abstract, authors), carrying a normalized `dedup_key` (for arXiv, the version-stripped ID — `arxiv:2401.12345`; for an HN story, the arXiv ID extracted from its link when present).
+- **`mentions`** — one row per source appearance, holding the per-source URL and signal (HN points/comments, arXiv categories), linked to its document.
+
+Ingestion does **resolve-or-create**: an incoming item attaches to an existing document (matched by an existing mention, then by `dedup_key`) or creates a new one. A `canonical_source` precedence (arXiv > RSS > HN) decides whose content is canonical, so an HN mention never clobbers a real arXiv abstract. This makes dedup **order-independent** — HN-before-paper and paper-before-HN converge to the same single document with two mentions. URL normalization and dedup-key derivation are isolated, unit-tested pure functions — the unglamorous core of dedup and where bugs hide.
+
+> Tradeoff: resolve-or-create is read-then-write, so it runs in a transaction. The Neon HTTP driver has no interactive transactions, so the serverless cron path will use the WebSocket driver (or careful statement ordering). A simpler single-table `dedup_key` + `ON CONFLICT` design was the considered alternative; the documents/mentions model was chosen for correctness and order-independence.
 
 ### Observability: an `ingestion_runs` table
 
-Every sync logs a row: source, timing, items seen/upserted, status, and any error. One source failing never kills the whole run — failures are isolated per source, with retries and backoff. This is about being able to _operate_ the thing, not just build it.
+Every sync logs a row: source, timing, items seen, documents/mentions written, status, and any error. One source failing never kills the whole run — failures are isolated per source. This is about being able to _operate_ the thing, not just build it.
 
 ### RAG: grounded, with citations and an explicit "I don't know"
 
