@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
 
 import { ingestionRuns } from "@/db/schema";
-import { writeItems, type Database } from "./resolve";
+import type { Database } from "@/db/types";
+import { writeItems } from "./resolve";
 import type { FetchOptions, SourceAdapter, SourceName } from "./types";
 
 export interface IngestResult {

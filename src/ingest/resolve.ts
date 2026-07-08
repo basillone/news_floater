@@ -1,18 +1,15 @@
 import { and, eq, sql } from "drizzle-orm";
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
-import * as schema from "@/db/schema";
 import { documents, mentions, type NewDocument } from "@/db/schema";
+import type { Database, Transaction as Tx } from "@/db/types";
 import { contentHash } from "@/lib/hash";
 import { deriveDedupKey } from "./dedup";
 import type { RawItem, SourceName } from "./types";
 
-// Phase 2 runs against the local (postgres-js) client. Resolve-or-create is
-// read-then-write, so it runs in a transaction — which the Neon HTTP driver
-// can't do. Widening this to the serverless cron (Phase 4) needs the WebSocket
-// driver. See private-notes/phases/phase-2-hn-dedup.md.
-export type Database = PostgresJsDatabase<typeof schema>;
-type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
+// Resolve-or-create is read-then-write, so it runs in a transaction. `Database`
+// is driver-agnostic (src/db/types.ts): local scripts pass the postgres-js
+// client, the cron passes the neon-serverless WebSocket client — the HTTP driver
+// can't do interactive transactions. See private-notes/14-jobs-and-serverless.md.
 
 // Canonical-content precedence: arXiv (real abstract) > RSS > HN (often link-only).
 const PRECEDENCE: Record<SourceName, number> = { arxiv: 3, rss: 2, hn: 1 };
