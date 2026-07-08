@@ -55,11 +55,12 @@ async function hydrate(rankedIds: string[]): Promise<Document[]> {
 }
 
 /**
- * Hybrid retrieval: semantic (pgvector) + keyword (Postgres FTS) fused with RRF.
- * Returns ranked documents (candidates) — a re-ranker can slot in before hydrate
- * later. `mode` allows semantic-only / keyword-only for evaluation.
+ * Hybrid retrieval ranking: semantic (pgvector) + keyword (Postgres FTS) fused
+ * with RRF, returning ranked document ids (the re-ranker seam is here). `mode`
+ * allows semantic-only / keyword-only. Callers hydrate the ids for their needs
+ * (the feed/search UI attaches mentions; the eval just checks the docs).
  */
-export async function search(query: string, opts: SearchOptions = {}): Promise<Document[]> {
+export async function searchRankedIds(query: string, opts: SearchOptions = {}): Promise<string[]> {
   const limit = opts.limit ?? DEFAULT_LIMIT;
   const mode = opts.mode ?? "hybrid";
 
@@ -77,5 +78,10 @@ export async function search(query: string, opts: SearchOptions = {}): Promise<D
     rankedIds = reciprocalRankFusion([semantic, keyword]).map((r) => r.id);
   }
 
-  return hydrate(rankedIds.slice(0, limit));
+  return rankedIds.slice(0, limit);
+}
+
+/** Hybrid search returning hydrated documents in ranked order. */
+export async function search(query: string, opts: SearchOptions = {}): Promise<Document[]> {
+  return hydrate(await searchRankedIds(query, opts));
 }
