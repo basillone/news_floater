@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  customType,
   index,
   integer,
   jsonb,
@@ -16,6 +17,12 @@ import {
 // private-notes/02-database-and-schema.md ("Why no `sources` table").
 export const sourceEnum = pgEnum("source", ["arxiv", "hn", "rss"]);
 export const runStatusEnum = pgEnum("run_status", ["ok", "partial", "failed"]);
+
+// Drizzle has no first-class `tsvector` type; this customType escape hatch keeps
+// the FTS column in the schema so migrations don't drift (see
+// private-notes/13-codebase-internals.md). It's a generated/stored column, so
+// it's not insertable — `$inferInsert` omits it automatically.
+const tsvector = customType<{ data: string }>({ dataType: () => "tsvector" });
 
 /**
  * The canonical work (a paper / post). Cross-source duplicates collapse into one
@@ -37,6 +44,10 @@ export const documents = pgTable(
     canonicalSource: sourceEnum("canonical_source").notNull(),
     // Hash of the embeddable text — guards against re-embedding unchanged content.
     contentHash: text("content_hash"),
+    // Generated full-text search vector over title + abstract (for hybrid retrieval).
+    searchVector: tsvector("search_vector").generatedAlwaysAs(
+      sql`to_tsvector('english', coalesce(title, '') || ' ' || coalesce(abstract, ''))`,
+    ),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
@@ -45,6 +56,7 @@ export const documents = pgTable(
       .on(t.dedupKey)
       .where(sql`${t.dedupKey} is not null`),
     index("documents_published_at_idx").on(t.publishedAt),
+    index("documents_search_idx").using("gin", t.searchVector),
   ],
 );
 
