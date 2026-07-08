@@ -1,13 +1,27 @@
-export default function Home() {
+import { DocumentCard } from "@/components/document-card";
+import { getRecentDocuments } from "@/db/queries";
+
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const docs = await getRecentDocuments(30);
+
   return (
-    <main className="mx-auto flex min-h-full max-w-2xl flex-col justify-center gap-4 px-6 py-24">
-      <h1 className="text-3xl font-semibold tracking-tight">News Floater</h1>
-      <p className="text-zinc-600 dark:text-zinc-400">
-        An AI/ML research aggregator. Ingests arXiv and Hacker News (and a few AI blogs),
-        deduplicates across sources, and serves a feed, hybrid semantic search, and grounded RAG
-        chat over the corpus.
+    <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8">
+      <h1 className="mb-1 text-lg font-semibold tracking-tight">Latest</h1>
+      <p className="mb-4 text-sm text-zinc-500">
+        Recent AI/ML research and discussion, deduplicated across arXiv and Hacker News.
       </p>
-      <p className="text-sm text-zinc-500">Scaffold in place — feed and search coming next.</p>
+
+      {docs.length === 0 ? (
+        <p className="py-12 text-center text-sm text-zinc-500">No documents yet.</p>
+      ) : (
+        <div>
+          {docs.map((doc) => (
+            <DocumentCard key={doc.id} doc={doc} />
+          ))}
+        </div>
+      )}
     </main>
   );
 }
