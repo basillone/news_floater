@@ -10,10 +10,8 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   // Neon direct connection — migrations / session-level features.
   DATABASE_URL_UNPOOLED: z.string().url(),
-  // OpenAI — embeddings.
+  // OpenAI — embeddings + chat (single-provider stack; see DECISIONS.md).
   OPENAI_API_KEY: z.string().min(1),
-  // Anthropic — summaries + chat.
-  ANTHROPIC_API_KEY: z.string().min(1),
   // Shared secret guarding the cron sync route.
   CRON_SECRET: z.string().min(1),
 });

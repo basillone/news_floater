@@ -14,6 +14,9 @@ export function SiteHeader() {
           <Link href="/search" className="hover:text-zinc-900 dark:hover:text-zinc-100">
             Search
           </Link>
+          <Link href="/chat" className="hover:text-zinc-900 dark:hover:text-zinc-100">
+            Chat
+          </Link>
         </nav>
       </div>
     </header>
