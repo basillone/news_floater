@@ -4,6 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useState } from "react";
 
+import { Markdown } from "@/components/markdown";
 import { SourceBadge } from "@/components/source-badge";
 import type { ChatMessage } from "@/llm/types";
 import type { SourceContext } from "@/retrieval/context";
@@ -62,7 +63,9 @@ export default function ChatPage() {
             <div className="text-sm leading-relaxed">
               {m.parts.map((part, i) => {
                 if (part.type === "text") {
-                  return (
+                  return m.role === "assistant" ? (
+                    <Markdown key={i}>{part.text}</Markdown>
+                  ) : (
                     <p key={i} className="whitespace-pre-wrap">
                       {part.text}
                     </p>
