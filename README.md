@@ -1,5 +1,7 @@
 # News Floater
 
+### Deployed link: [news-floater.vercel.app](https://news-floater.vercel.app/)
+
 An AI/ML research aggregator. It ingests papers and posts from multiple sources, deduplicates
 them across sources, and serves a browsable feed, hybrid semantic search, and grounded
 retrieval-augmented chat over the corpus.
