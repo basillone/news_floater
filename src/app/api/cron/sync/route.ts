@@ -6,6 +6,7 @@ import { env } from "@/env";
 import { ingestAll } from "@/ingest/run";
 import { arxivAdapter } from "@/ingest/sources/arxiv";
 import { hnAdapter } from "@/ingest/sources/hn";
+import { rssAdapter } from "@/ingest/sources/rss";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +28,9 @@ export async function GET(request: Request) {
 
   const { db, close } = createServerlessDb();
   try {
-    const ingest = await ingestAll(db, [arxivAdapter, hnAdapter], { limit: SYNC_LIMIT });
+    const ingest = await ingestAll(db, [arxivAdapter, hnAdapter, rssAdapter], {
+      limit: SYNC_LIMIT,
+    });
     const embedded = await embedPending(db);
     return NextResponse.json({ ok: true, ingest, embedded });
   } catch (err) {

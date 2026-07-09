@@ -4,7 +4,7 @@ This document records the architectural and tooling decisions behind this projec
 
 ## What this is, and the honest framing
 
-An AI/ML research aggregator: it ingests content from arXiv (cs.CL, cs.AI, cs.LG) and Hacker News (with AI blogs as a follow-on), stores it in Postgres, generates embeddings, and exposes a feed, hybrid semantic search, and a grounded RAG chat over the corpus.
+An AI/ML research aggregator: it ingests content from arXiv (cs.CL, cs.AI, cs.LG), Hacker News, and AI blogs via RSS/Atom (OpenAI, Google DeepMind, Hugging Face, Simon Willison), stores it in Postgres, generates embeddings, and exposes a feed, hybrid semantic search, and a grounded RAG chat over the corpus.
 
 It serves two goals, and they pull in different directions:
 
