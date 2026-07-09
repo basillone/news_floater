@@ -61,7 +61,8 @@ flowchart LR
 - **Neon** Postgres + **pgvector**, via **Drizzle ORM** (typed schema → checked-in SQL migrations)
 - **OpenAI** for both embeddings (`text-embedding-3-small`) and chat (`gpt-4o-mini`), behind a thin
   provider seam
-- **Vercel AI SDK** for streamed, cited chat
+- **Vercel AI SDK** (`ai` + `@ai-sdk/openai` + `@ai-sdk/react`) — the provider abstraction for
+  embeddings and chat, plus streamed, cited chat via `useChat`
 - Deployed on **Vercel** (daily cron-driven sync; per-preview Neon DB branches)
 
 ## Design notes
