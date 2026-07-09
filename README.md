@@ -23,8 +23,10 @@ The corpus updates itself daily via a scheduled job — the feed is always curre
 - **Hybrid search** — vector similarity (pgvector) fused with Postgres full-text search via
   Reciprocal Rank Fusion, so exact tokens (model names, acronyms like `RLHF`) _and_ semantic
   paraphrases both work.
-- **Grounded RAG chat** — retrieves the top sources, answers only from them with inline `[n]`
-  citations, and explicitly declines ("not in the corpus") rather than hallucinating.
+- **Grounded RAG chat** — a conversational companion that grounds specific findings in retrieved
+  sources (inline `[n]` citations) and won't fabricate results, while explaining concepts for any
+  audience (new-to-ML → researcher). Stays scoped to AI/ML; "what's new" questions summarize the
+  latest items by date.
 
 ## Architecture
 

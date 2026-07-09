@@ -7,7 +7,7 @@ import {
 
 import { buildSystemPrompt, chatModel } from "@/llm/chat";
 import type { ChatMessage } from "@/llm/types";
-import { retrieveContext } from "@/retrieval/context";
+import { isRecencyQuery, retrieveContext, retrieveRecent } from "@/retrieval/context";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +25,13 @@ function latestUserText(messages: ChatMessage[]): string {
 
 export async function POST(req: Request) {
   const { messages }: { messages: ChatMessage[] } = await req.json();
-  const { sources, contextBlock } = await retrieveContext(latestUserText(messages), 6);
+  const query = latestUserText(messages);
+
+  // Temporal queries ("what's new", "top stories this week") retrieve by recency;
+  // everything else uses hybrid semantic + keyword retrieval.
+  const { sources, contextBlock } = isRecencyQuery(query)
+    ? await retrieveRecent(8)
+    : await retrieveContext(query, 6);
 
   // Surface the real error to the client (this is a dev-facing tool). A stricter
   // production app would log server-side and return a sanitized message.
